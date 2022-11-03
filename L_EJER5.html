@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<meta charset="utf-8" />
+
+<head>
+
+    <script type="text/javascript" src="Paises.js"></script>
+    <script type="text/javascript" src="Departamento.js"></script>
+    <script type="text/javascript" src="Ciudades.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
+
+    <style>
+        #map {
+            width: 100%;
+            height: 600px;
+            box-shadow: 5px 5px 5px rgb(196, 5, 196);
+        }
+    </style>
+</head>
+
+
+
+<body>
+    <div id="map"></div>
+    <script>
+
+        var osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution:
+                '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a>'
+                + 'contributors', maxZoom: 18
+        });
+
+
+
+        function getColor(d) {
+            return d > 100000000 ? '#800026' :
+                d > 50000000 ? '#BD0026' :
+                    d > 20000000 ? '#E31A1C' :
+                        d > 10000000 ? '#FC4E2A' :
+                            d > 5000000 ? '#FD8D3C' :
+                                d > 2000000 ? '#FEB24C' :
+                                    d > 1000000 ? '#FED976' :
+                                        '#FFEDA0';
+        };
+
+
+
+        // selecciona los datos desde el atributo pop_est
+        function EstiloRelleno(feature) {
+            return {
+                fillColor: getColor(feature.properties.pop_est),
+                weight: 2,
+                opacity: 1,
+                color: 'white',
+                dashArray: '3',
+                fillOpacity: 0.7
+            };
+        }
+        //
+        function popup(feature, layer) {
+            if (feature.properties && feature.properties.name) {
+                layer.bindPopup(feature.properties.name);
+
+            }
+
+        }
+
+        function getColor3(d) {
+            return d == 'N' ? '#404258' :
+                d == 'S' ? '#E01144C' :
+                    '#38383a';
+        };
+        function style3(feature) {
+            return {
+                color: getColor3(feature.properties.CAPITAL),
+                stroke: true,
+                readius: 10,
+                opacity: 1,
+                fillColor: getColor3(feature.properties.CAPITAL),
+                fillOpacity: 0.7
+            };
+        }
+
+
+
+
+        // estilos capas paises------------------
+        var Estilopaises = {
+            'color': "#0000FF",
+            'weight': 2,
+            'opacity': 0.6
+        };
+        //--------------------------------------------------
+
+
+
+
+
+
+
+        var paises = new L.tileLayer.wms("http://localhost:8080/geoserver/wms", {
+            layers: 'earth:paises',
+            format: 'image/png',
+            transparent: true,
+            attribution: "NaturalEarth"
+        });
+
+        var departamento = new L.tileLayer.wms("http://localhost:8080/geoserver/wms", {
+            layers: 'earth:departamentos',
+            format: 'image/png',
+            transparent: true,
+            attribution: "NaturalEarth"
+        });
+
+        var cities = L.tileLayer.wms("http://localhost:8080/geoserver/wms", {
+            layers: 'earth:ciudades',
+            format: 'image/png',
+            transparent: true,
+            tiled: true,
+            attribution: "Natural Earth"
+        });
+
+
+
+
+
+        var baseMaps = {
+            "OpenStreetMap": osm
+        };
+
+        var overlayMaps = {
+            "Paises": paises,
+            "Departamento": departamento,
+            "Ciudades": cities
+
+        };
+
+        var map = L.map('map', {
+            center: [1.6201816037286574, -75.60988426208498],
+            zoom: 13,
+            layers: [osm, paises, departamento, cities],
+            scrollWheelZoom: false,
+        });
+
+        var title = L.control();
+        title.onAdd = function (map) {
+            var div = L.DomUtil.create('div', 'info');
+
+            div.innerHTML +=
+                '<h2>Ciudades del mundo</h2>Tamaño según población'; return div;
+        };
+
+
+
+
+
+
+        function getColor3(d) {
+            return d == 'N' ? '#404258' :
+                d == 'S' ? '#E01144C' :
+                    '#38383a';
+        };
+        function style3(feature) {
+            return {
+                color: getColor3(feature.properties.CAPITAL),
+                stroke: true,
+                readius: 10,
+                opacity: 1,
+                fillColor: getColor3(feature.properties.CAPITAL),
+                fillOpacity: 0.7
+            };
+        }
+
+
+        title.addTo(map);
+        L.control.layers(baseMaps, overlayMaps, { collapsed: false }).addTo(map);
+
+
+        // L.geoJson(Paises).addTo(map);
+
+
+
+        L.geoJson(Paises, {
+            // style: EstiloPaises
+            style: EstiloRelleno,
+            onEachFeature: popup
+
+        }).addTo(map);
+
+        L.geoJson(Departamento, {
+            // style: EstiloPaises
+
+            onEachFeature: popup
+
+        }).addTo(map);
+
+  
+
+        L.geoJson(ciudades, {
+            pointToLayer: function (feature, latlng) {
+                return v_ciudades.addLayer(L.circleMarker(latlng, style3(feature))
+                    .bindPopup(
+                        "Nombre: <b>" + feature.properties.CIUDAD + "</b><br>" +
+                        "Tipo: <b>" + (feature.properties.CAPITAL == "S" ? 'Capital' : "Ciudad") + "</b>"
+                    ))
+            },
+            onEachFeature: popup
+
+        }).addTo(map);
+        map.addLayer(v_ciudades);
+
+
+
+
+
+
+    </script>
+
+</body>
+
+</html>
